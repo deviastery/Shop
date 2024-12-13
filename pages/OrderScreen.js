@@ -11,6 +11,7 @@ import MapView, { Marker } from "react-native-maps";
 import { useRoute } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const OrderScreen = () => {
   const route = useRoute();
@@ -52,11 +53,37 @@ const OrderScreen = () => {
     longitudeDelta: 0.1, // Увеличение области отображения для Москвы
   };
 
-  const handleConfirmOrder = () => {
-    console.log("Стоимость:", total);
-    console.log("Номер заказа:", orderId);
-    console.log("Дата доставки:", date);
-    console.log("Координаты доставки:", coordinates || initialRegion);
+  // const handleConfirmOrder = () => {
+  //   console.log("Стоимость:", total);
+  //   console.log("Номер заказа:", orderId);
+  //   console.log("Дата доставки:", date);
+  //   console.log("Координаты доставки:", coordinates || initialRegion);
+  //   navigation.navigate("History");
+  // };
+
+  const handleConfirmOrder = async () => {
+    const orderData = {
+      total: total,
+      orderId: orderId,
+      deliveryDate: date.toISOString(), // Используем ISO string для даты
+      deliveryCoordinates: {
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+      },
+    };
+
+    console.log("orderData:", orderData);
+
+    try {
+      const jsonValue = await AsyncStorage.getItem("@orders");
+      let orders = jsonValue != null ? JSON.parse(jsonValue) : [];
+      orders.push(orderData);
+      const jsonValue2 = JSON.stringify(orders);
+      await AsyncStorage.setItem("@orders", jsonValue2);
+    } catch (e) {
+      console.error("Error saving order:", e);
+    }
+
     navigation.navigate("History");
   };
 
