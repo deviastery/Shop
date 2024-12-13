@@ -181,9 +181,6 @@ const HomeScreen = () => {
 
       if (!response.ok) {
         const data = await response.json();
-        const orderId = data.id;
-        navigation.navigate("Order", { orderId: data.id });
-
         const errorData = await response.json(); // Try to parse error response
         const errorMessage =
           errorData.message || `HTTP error! status: ${response.status}`;
@@ -192,7 +189,7 @@ const HomeScreen = () => {
 
       const data = await response.json();
       Alert.alert("Заказ оформлен!", `Номер заказа: ${data.id}`); // Assuming the API returns an 'id'
-      navigation.navigate("Order", { orderId: data.id });
+      navigation.navigate("Order", { orderId: data.id, total: total });
     } catch (error) {
       Alert.alert("Ошибка при оформлении заказа", error.message);
       console.error("Error placing order:", error);

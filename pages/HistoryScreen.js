@@ -1,103 +1,111 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  Button,
-  StyleSheet,
-  Platform,
-  TextInput,
-} from "react-native"; // Добавлено Platform
-import MapView, { Marker } from "react-native-maps";
-import { useRoute } from "@react-navigation/native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import React, { useState, useEffect } from "react";
+import { View, Text, FlatList, StyleSheet, Button, Alert } from "react-native";
 
 const HistoryScreen = () => {
-  const route = useRoute();
-  const orderId = route.params?.orderId;
-  const mapRef = useRef(null);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [date, setDate] = useState(new Date());
-  const [mode, setMode] = useState("date");
-  const [show, setShow] = useState(false);
-  const [coordinates, setCoordinates] = useState({
-    latitude: 55.75222,
-    longitude: 37.61556,
-    latitudeDelta: 0.1,
-    longitudeDelta: 0.1,
-  });
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch("https://dummyjson.com/carts/user/1");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setOrders(data.carts);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const onChange = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    setShow(Platform.OS === "ios");
-    setDate(currentDate);
+    fetchOrders();
+  }, []);
+
+  const handleDeleteOrder = async (orderId) => {
+    Alert.alert(
+      "Удалить заказ?",
+      "Вы уверены, что хотите удалить этот заказ?",
+      [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Удалить",
+          onPress: async () => {
+            try {
+              const response = await fetch(
+                `https://dummyjson.com/carts/${orderId}`,
+                {
+                  method: "DELETE",
+                }
+              );
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              const updatedOrders = orders.filter(
+                (order) => order.id !== orderId
+              );
+              setOrders(updatedOrders);
+            } catch (error) {
+              Alert.alert(
+                "Ошибка",
+                "Не удалось удалить заказ. Попробуйте позже."
+              );
+              console.error("Error deleting order:", error);
+            }
+          },
+        },
+      ]
+    );
   };
 
-  const showMode = (currentMode) => {
-    setShow(true);
-    setMode(currentMode);
-  };
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Загрузка...</Text>
+      </View>
+    );
+  }
 
-  const showDatepicker = () => {
-    showMode("date");
-  };
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Ошибка загрузки заказов: {error.message}</Text>
+      </View>
+    );
+  }
 
-  const initialRegion = {
-    latitude: 55.75222, // Широта Москвы
-    longitude: 37.61556, // Долгота Москвы
-    latitudeDelta: 0.1, // Увеличение области отображения для Москвы
-    longitudeDelta: 0.1, // Увеличение области отображения для Москвы
-  };
-
-  const handleConfirmOrder = () => {
-    console.log("Номер заказа:", orderId);
-    console.log("Дата доставки:", date);
-    console.log("Координаты доставки:", coordinates || initialRegion);
-  };
-
-  const onMarkerDragEnd = (e) => {
-    setCoordinates({
-      latitude: e.nativeEvent.coordinate.latitude,
-      longitude: e.nativeEvent.coordinate.longitude,
-      latitudeDelta: coordinates.latitudeDelta, // Сохраняем уровень масштабирования
-      longitudeDelta: coordinates.longitudeDelta, // Сохраняем уровень масштабирования
-    });
-  };
+  if (orders.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text>История заказов пуста.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Text>Номер заказа: {orderId}</Text>
-
-      <View>
-        <Button title="Выбрать дату доставки" onPress={showDatepicker} />
-        {show && (
-          <DateTimePicker
-            testID="dateTimePicker"
-            value={date}
-            mode={mode}
-            is24Hour={true}
-            onChange={onChange}
-          />
+      <FlatList
+        data={orders}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.order}>
+            <Text style={styles.orderText}>ID заказа: {item.id}</Text>
+            <Text style={styles.orderText}>Товары:</Text>
+            {item.products.map((product) => (
+              <Text key={product.id} style={styles.productText}>
+                - {product.title} x {product.quantity}
+              </Text>
+            ))}
+            <Button
+              title="Удалить"
+              onPress={() => handleDeleteOrder(item.id)}
+            />
+          </View>
         )}
-        <Text>Выбранная дата: {date.toLocaleDateString()}</Text>
-      </View>
-
-      <MapView
-        style={styles.map}
-        initialRegion={initialRegion}
-        ref={mapRef}
-        onRegionChangeComplete={(region) => setCoordinates(region)}
-      >
-        <Marker
-          coordinate={{
-            latitude: coordinates.latitude,
-            longitude: coordinates.longitude,
-          }}
-          draggable
-          onDragEnd={onMarkerDragEnd}
-        />
-      </MapView>
-
-      <Button title="Подтвердить заказ" onPress={handleConfirmOrder} />
+      />
     </View>
   );
 };
@@ -105,20 +113,21 @@ const HistoryScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 10,
   },
-  map: {
-    width: 300,
-    height: 300,
-  },
-  input: {
-    height: 40,
-    borderColor: "gray",
+  order: {
     borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
     marginBottom: 10,
-    paddingHorizontal: 10,
-    width: 200,
+  },
+  orderText: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  productText: {
+    fontSize: 14,
+    marginLeft: 10,
   },
 });
 

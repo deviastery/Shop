@@ -10,11 +10,15 @@ import {
 import MapView, { Marker } from "react-native-maps";
 import { useRoute } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useNavigation } from "@react-navigation/native";
 
 const OrderScreen = () => {
   const route = useRoute();
   const orderId = route.params?.orderId;
+  const total = route.params?.total;
   const mapRef = useRef(null);
+
+  const navigation = useNavigation();
 
   const [date, setDate] = useState(new Date());
   const [mode, setMode] = useState("date");
@@ -49,9 +53,11 @@ const OrderScreen = () => {
   };
 
   const handleConfirmOrder = () => {
+    console.log("Стоимость:", total);
     console.log("Номер заказа:", orderId);
     console.log("Дата доставки:", date);
     console.log("Координаты доставки:", coordinates || initialRegion);
+    navigation.navigate("History");
   };
 
   const onMarkerDragEnd = (e) => {
