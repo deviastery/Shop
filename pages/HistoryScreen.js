@@ -11,7 +11,7 @@ import MapView, { Marker } from "react-native-maps";
 import { useRoute } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-const OrderScreen = () => {
+const HistoryScreen = () => {
   const route = useRoute();
   const orderId = route.params?.orderId;
   const mapRef = useRef(null);
@@ -122,4 +122,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OrderScreen;
+export default HistoryScreen;
