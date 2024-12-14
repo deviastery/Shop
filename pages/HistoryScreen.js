@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, StyleSheet, Button, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import moment from "moment";
 
 const HistoryScreen = () => {
   const [orders, setOrders] = useState([]);
@@ -59,7 +60,12 @@ const HistoryScreen = () => {
               const updatedOrders = orders.filter(
                 (order) => order.id !== orderId
               );
-              // setOrders(updatedOrders);
+              setOrders(updatedOrders);
+
+              await AsyncStorage.setItem(
+                "@orders",
+                JSON.stringify(updatedOrders)
+              );
             } catch (error) {
               Alert.alert(
                 "Ошибка",
@@ -101,17 +107,17 @@ const HistoryScreen = () => {
     <View style={styles.container}>
       <FlatList
         data={orders}
-        keyExtractor={(item) => item.orderId.toString()}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.order}>
             <Text style={styles.orderText}>ID заказа: {item.orderId}</Text>
             <Text style={styles.orderText}>Стоимость: {item.total}</Text>
             <Text style={styles.orderText}>
-              Дата доставки: {item.deliveryDate}
+              Дата доставки: {moment(item.deliveryDate).format("DD.MM.YYYY")}
             </Text>
             <Text style={styles.orderText}>
-              Место доставки: {item.deliveryCoordinates.latitude}+' '+
-              {item.deliveryCoordinates.longitude}`
+              Место доставки: {item.deliveryCoordinates.latitude}{" "}
+              {item.deliveryCoordinates.longitude}
             </Text>
             <Button
               title="Удалить"

@@ -12,6 +12,7 @@ import { useRoute } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Geocoder from "react-native-geocoding";
 
 const OrderScreen = () => {
   const route = useRoute();
@@ -30,6 +31,7 @@ const OrderScreen = () => {
     latitudeDelta: 0.1,
     longitudeDelta: 0.1,
   });
+  const [address, setAddress] = useState("");
 
   const onChange = (event, selectedDate) => {
     const currentDate = selectedDate || date;
@@ -53,16 +55,9 @@ const OrderScreen = () => {
     longitudeDelta: 0.1, // Увеличение области отображения для Москвы
   };
 
-  // const handleConfirmOrder = () => {
-  //   console.log("Стоимость:", total);
-  //   console.log("Номер заказа:", orderId);
-  //   console.log("Дата доставки:", date);
-  //   console.log("Координаты доставки:", coordinates || initialRegion);
-  //   navigation.navigate("History");
-  // };
-
   const handleConfirmOrder = async () => {
     const orderData = {
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
       total: total,
       orderId: orderId,
       deliveryDate: date.toISOString(), // Используем ISO string для даты
@@ -87,13 +82,15 @@ const OrderScreen = () => {
     navigation.navigate("History");
   };
 
-  const onMarkerDragEnd = (e) => {
-    setCoordinates({
+  const onMarkerDragEnd = async (e) => {
+    const newCoordinates = {
       latitude: e.nativeEvent.coordinate.latitude,
       longitude: e.nativeEvent.coordinate.longitude,
-      latitudeDelta: coordinates.latitudeDelta, // Сохраняем уровень масштабирования
-      longitudeDelta: coordinates.longitudeDelta, // Сохраняем уровень масштабирования
-    });
+      latitudeDelta: coordinates.latitudeDelta,
+      longitudeDelta: coordinates.longitudeDelta,
+    };
+
+    setCoordinates(newCoordinates);
   };
 
   return (
