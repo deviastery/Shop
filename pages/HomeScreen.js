@@ -33,8 +33,8 @@ const HomeScreen = () => {
     {
       id: "3",
       name: "Товар 3",
-      price: 100,
-      quantity: 3,
+      price: 150,
+      quantity: 1,
       image:
         "https://cdn.laredoute.com/cdn-cgi/image/width=500,height=500,fit=pad,dpr=1/products/9/1/9/919a86747fac793280c5d5bc40c4ae2c.jpg",
     },
@@ -42,7 +42,7 @@ const HomeScreen = () => {
       id: "4",
       name: "Товар 4",
       price: 200,
-      quantity: 4,
+      quantity: 2,
       image:
         "https://img.fix-price.com/800x800/_marketplace/images/origin/ed/eda3309edd5d93e181b58afc1634bc19.jpg",
     },
@@ -56,13 +56,13 @@ const HomeScreen = () => {
   const clearAllData = async () => {
     try {
       await AsyncStorage.clear();
-      console.log("AsyncStorage cleared successfully!");
+      console.log("AsyncStorage очистился");
     } catch (e) {
-      console.error("Error clearing AsyncStorage:", e);
+      console.error("Ошибка очищения AsyncStorage:", e);
     }
   };
 
-  // Add item to cart
+  // Увеличить количество товара в корзине
   const handleAdd = (id) => {
     setCart((prevCart) =>
       prevCart.map((item) =>
@@ -71,7 +71,7 @@ const HomeScreen = () => {
     );
   };
 
-  // Remove item from cart
+  // Уменьшить количество товара в корзине
   const handleRemove = (id) => {
     setCart((prevCart) =>
       prevCart.map((item) =>
@@ -82,28 +82,29 @@ const HomeScreen = () => {
     );
   };
 
-  // Save for later
+  // Отложить
   const handleSaveForLater = (id) => {
     const itemToMove = cart.find((item) => item.id === id);
     setSavedForLater((prev) => [...prev, itemToMove]);
     setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
+  // Удалить товар из отложенных
   const handleRemoveSaved = (id) => {
     setSavedForLater((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Apply promo code
+  // Применить промокод
   const applyPromoCode = () => {
-    if (promoCode === "SALE20") {
-      setDiscount(0.2); // 20% discount
+    if (promoCode === "NEWYEAR") {
+      setDiscount(0.2); // 20% скидка
       alert("Промокод применён! Скидка 20%");
     } else {
       alert("Неверный промокод");
     }
   };
 
-  // Calculate total
+  // Посчитать сумму корзины
   const calculateTotal = () => {
     const total = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
@@ -112,7 +113,7 @@ const HomeScreen = () => {
     return total - total * discount;
   };
 
-  // Save state to AsyncStorage
+  // Сохранить в AsyncStorage
   const saveData = async () => {
     try {
       const jsonValue = JSON.stringify({ cart, savedForLater });
@@ -122,7 +123,7 @@ const HomeScreen = () => {
     }
   };
 
-  // Load state from AsyncStorage
+  // Загрузить из AsyncStorage
   const loadData = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem("@appData");
@@ -136,14 +137,17 @@ const HomeScreen = () => {
     }
   };
 
+  // Начальная загрузка данных
   useEffect(() => {
     loadData();
   }, []);
 
+  // Сохранение корзины в AsyncStorage при ее изменении
   useEffect(() => {
     saveData();
   }, [cart, savedForLater]);
 
+  // Отправка запроса оформления заказа
   const handlePlaceOrder = async () => {
     const transformedCart = [];
     const cartMap = new Map();
@@ -151,7 +155,7 @@ const HomeScreen = () => {
     for (const item of cart) {
       const id = parseInt(item.id);
       if (cartMap.has(id)) {
-        cartMap.set(id, cartMap.get(id) + item.quantity);
+        cartMap.set(id, cartMap.get(id) + item.quantity); // если товар уже есть в корзине, увеличиваем его количество
       } else {
         cartMap.set(id, item.quantity);
       }
@@ -177,22 +181,20 @@ const HomeScreen = () => {
       });
 
       console.log("Код состояния ответа:", response.status);
-      // console.log("Полный ответ:", response); // Залогируйте весь объект ответа
 
       if (!response.ok) {
-        const data = await response.json();
-        const errorData = await response.json(); // Try to parse error response
+        const errorData = await response.json();
         const errorMessage =
-          errorData.message || `HTTP error! status: ${response.status}`;
+          errorData.message || `Ошибка. Статус: ${response.status}`;
         throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      Alert.alert("Заказ оформлен!", `Номер заказа: ${data.id}`); // Assuming the API returns an 'id'
+      Alert.alert("Заказ оформлен!", `Номер заказа: ${data.id}`);
       navigation.navigate("Order", { orderId: data.id, total: total });
     } catch (error) {
       Alert.alert("Ошибка при оформлении заказа", error.message);
-      console.error("Error placing order:", error);
+      console.error("Ошибка при оформлении заказа:", error);
     }
   };
 
@@ -218,7 +220,7 @@ const HomeScreen = () => {
       />
       <Button title="Применить" onPress={applyPromoCode} />
       <Button title="Оформить заказ" onPress={handlePlaceOrder} />
-      <Button title="Clear AsyncStorage" onPress={clearAllData} />
+      <Button title="Очистить AsyncStorage" onPress={clearAllData} />
       <Text>Итоговая стоимость: {calculateTotal()} ₽</Text>
       <Text>Отложенные товары:</Text>
       <FlatList

@@ -9,9 +9,13 @@ const HistoryScreen = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Запрос на получение всех заказов пользователя
     const fetchOrders = async () => {
       try {
         const response = await fetch("https://dummyjson.com/carts/user/1");
+
+        console.log("Код состояния ответа:", response.status);
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -26,21 +30,22 @@ const HistoryScreen = () => {
 
     fetchOrders();
 
+    // Получение заказов из AsyncStorage
     AsyncStorage.getItem("@orders")
       .then((ordersJson) => {
         let orders = null;
         if (ordersJson !== null) {
           orders = JSON.parse(ordersJson);
         }
-        console.log("Orders:", orders); // Вывод данных
-        // Обработка полученных данных
+        console.log("Заказы:", orders);
         setOrders(orders);
       })
       .catch((error) => {
-        console.error("Failed to fetch orders:", error);
+        console.error("Ошибка получения заказов:", error);
       });
   }, []);
 
+  // Удаление заказа из истории
   const handleDeleteOrder = async (orderId) => {
     Alert.alert(
       "Удалить заказ?",
@@ -51,17 +56,23 @@ const HistoryScreen = () => {
           text: "Удалить",
           onPress: async () => {
             try {
+              // Запрос на удаление заказа из истории
               const response = await fetch(`https://dummyjson.com/carts/1`, {
                 method: "DELETE",
               });
+
+              console.log("Код состояния ответа:", response.status);
+
               if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
               }
+              // Удаление заказа из стейта
               const updatedOrders = orders.filter(
                 (order) => order.id !== orderId
               );
               setOrders(updatedOrders);
 
+              // Запись заказов в AsyncStorage
               await AsyncStorage.setItem(
                 "@orders",
                 JSON.stringify(updatedOrders)
@@ -71,7 +82,7 @@ const HistoryScreen = () => {
                 "Ошибка",
                 "Не удалось удалить заказ. Попробуйте позже."
               );
-              console.error("Error deleting order:", error);
+              console.error("Ошибка удаления заказа:", error);
             }
           },
         },

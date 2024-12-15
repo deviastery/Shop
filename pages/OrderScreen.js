@@ -1,18 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  Button,
-  StyleSheet,
-  Platform,
-  TextInput,
-} from "react-native"; // Добавлено Platform
+import { View, Text, Button, StyleSheet, Platform } from "react-native"; // Добавлено Platform
 import MapView, { Marker } from "react-native-maps";
 import { useRoute } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Geocoder from "react-native-geocoding";
 
 const OrderScreen = () => {
   const route = useRoute();
@@ -23,7 +15,6 @@ const OrderScreen = () => {
   const navigation = useNavigation();
 
   const [date, setDate] = useState(new Date());
-  const [mode, setMode] = useState("date");
   const [show, setShow] = useState(false);
   const [coordinates, setCoordinates] = useState({
     latitude: 55.75222,
@@ -31,23 +22,15 @@ const OrderScreen = () => {
     latitudeDelta: 0.1,
     longitudeDelta: 0.1,
   });
-  const [address, setAddress] = useState("");
 
-  const onChange = (event, selectedDate) => {
+  // Handler для выбора даты
+  const onChangeDatepicker = (event, selectedDate) => {
     const currentDate = selectedDate || date;
     setShow(Platform.OS === "ios");
     setDate(currentDate);
   };
 
-  const showMode = (currentMode) => {
-    setShow(true);
-    setMode(currentMode);
-  };
-
-  const showDatepicker = () => {
-    showMode("date");
-  };
-
+  // Начальные координаты
   const initialRegion = {
     latitude: 55.75222, // Широта Москвы
     longitude: 37.61556, // Долгота Москвы
@@ -55,12 +38,14 @@ const OrderScreen = () => {
     longitudeDelta: 0.1, // Увеличение области отображения для Москвы
   };
 
+  // Подтверждение заказа
   const handleConfirmOrder = async () => {
+    // Необходимые данные заказа
     const orderData = {
       id: `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`,
       total: total,
       orderId: orderId,
-      deliveryDate: date.toISOString(), // Используем ISO string для даты
+      deliveryDate: date.toISOString(),
       deliveryCoordinates: {
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
@@ -69,6 +54,7 @@ const OrderScreen = () => {
 
     console.log("orderData:", orderData);
 
+    // Запись заказа в AsyncStorage
     try {
       const jsonValue = await AsyncStorage.getItem("@orders");
       let orders = jsonValue != null ? JSON.parse(jsonValue) : [];
@@ -76,12 +62,13 @@ const OrderScreen = () => {
       const jsonValue2 = JSON.stringify(orders);
       await AsyncStorage.setItem("@orders", jsonValue2);
     } catch (e) {
-      console.error("Error saving order:", e);
+      console.error("Ошибка сохранения заказа:", e);
     }
 
     navigation.navigate("History");
   };
 
+  // Функция перемещения маркера карты
   const onMarkerDragEnd = async (e) => {
     const newCoordinates = {
       latitude: e.nativeEvent.coordinate.latitude,
@@ -98,14 +85,14 @@ const OrderScreen = () => {
       <Text>Номер заказа: {orderId}</Text>
 
       <View>
-        <Button title="Выбрать дату доставки" onPress={showDatepicker} />
+        <Button title="Выбрать дату доставки" onPress={() => setShow(true)} />
         {show && (
           <DateTimePicker
             testID="dateTimePicker"
             value={date}
-            mode={mode}
+            mode="date"
             is24Hour={true}
-            onChange={onChange}
+            onChange={onChangeDatepicker}
           />
         )}
         <Text>Выбранная дата: {date.toLocaleDateString()}</Text>
