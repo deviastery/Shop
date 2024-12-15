@@ -1,18 +1,21 @@
 import React from "react";
 import { View, Text, Image, Button, StyleSheet } from "react-native";
 
-const CartItem = ({ item, onAdd, onRemove, onSaveForLater }) => {
+const CartItem = ({ item, onAdd, onRemove, onSaveForLater, isInSaved }) => {
   return (
     <View style={styles.card}>
       <Image source={{ uri: item.image }} style={styles.image} />
       <View style={styles.details}>
         <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.price}>Цена: {item.price} ₽</Text>
+        <Text>Цена: {item.price} ₽</Text>
         <View style={styles.actions}>
-          <Button title="+" onPress={() => onAdd(item.id)} />
-          <Text>{item.quantity}</Text>
           <Button title="-" onPress={() => onRemove(item.id)} />
-          <Button title="Отложить" onPress={() => onSaveForLater(item.id)} />
+          <Text>{item.quantity}</Text>
+          <Button title="+" onPress={() => onAdd(item.id)} />
+          <Button
+            title={isInSaved ? "Убрать из отложенных" : "Отложить"}
+            onPress={() => onSaveForLater(item.id)}
+          />
         </View>
       </View>
     </View>

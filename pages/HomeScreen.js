@@ -85,13 +85,19 @@ const HomeScreen = () => {
   // Отложить
   const handleSaveForLater = (id) => {
     const itemToMove = cart.find((item) => item.id === id);
-    setSavedForLater((prev) => [...prev, itemToMove]);
-    setCart((prev) => prev.filter((item) => item.id !== id));
-  };
+    const savedForLaterItemToMove = savedForLater.find(
+      (item) => item.id === id
+    );
 
-  // Удалить товар из отложенных
-  const handleRemoveSaved = (id) => {
-    setSavedForLater((prev) => prev.filter((item) => item.id !== id));
+    if (savedForLaterItemToMove) {
+      // Убрать из отложенных
+      setSavedForLater((prev) => prev.filter((item) => item.id !== id));
+      setCart((prev) => [...prev, savedForLaterItemToMove]);
+    } else {
+      // Отложить
+      setSavedForLater((prev) => [...prev, itemToMove]);
+      setCart((prev) => prev.filter((item) => item.id !== id));
+    }
   };
 
   // Применить промокод
@@ -220,7 +226,7 @@ const HomeScreen = () => {
       />
       <Button title="Применить" onPress={applyPromoCode} />
       <Button title="Оформить заказ" onPress={handlePlaceOrder} />
-      <Button title="Очистить AsyncStorage" onPress={clearAllData} />
+      {/* <Button title="Очистить AsyncStorage" onPress={clearAllData} /> */}
       <Text>Итоговая стоимость: {calculateTotal()} ₽</Text>
       <Text>Отложенные товары:</Text>
       <FlatList
@@ -230,8 +236,8 @@ const HomeScreen = () => {
             item={item}
             onAdd={() => {}}
             onRemove={() => {}}
-            onSaveForLater={() => {}}
-            onLongPress={() => handleRemoveSaved(item.id)}
+            onSaveForLater={handleSaveForLater}
+            isInSaved={true}
           />
         )}
         keyExtractor={(item) => item.id}

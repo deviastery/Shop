@@ -84,7 +84,7 @@ const OrderScreen = () => {
     <View style={styles.container}>
       <Text>Номер заказа: {orderId}</Text>
 
-      <View>
+      <View style={styles.dateSection}>
         <Button title="Выбрать дату доставки" onPress={() => setShow(true)} />
         {show && (
           <DateTimePicker
@@ -123,11 +123,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
+    marginVertical: 60,
   },
   map: {
     width: 300,
     height: 300,
+    marginVertical: 50,
   },
   input: {
     height: 40,
@@ -136,6 +137,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: 10,
     width: 200,
+    marginVertical: 10,
+  },
+  dateSection: {
+    marginVertical: 20,
   },
 });
 
